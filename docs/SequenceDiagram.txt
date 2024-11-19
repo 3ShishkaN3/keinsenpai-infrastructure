@@ -1,0 +1,242 @@
+@startuml
+!theme plain
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam SequenceGroupBodyBackgroundColor transparent
+skinparam MaxMessageSize 300
+
+actor "Пользователь" as user
+participant "Веб-клиент" as webclient
+participant "API Шлюз" as gateway
+participant "Сервис авторизации" as auth
+participant "Сервис пользователей" as userService
+participant "Сервис курсов" as courseService
+participant "Сервис уроков" as lessonService
+participant "Сервис материалов" as materialService
+participant "Сервис тестирования" as testingService
+participant "Сервис прогресса" as progressService
+participant "Сервис достижений" as achievementService
+participant "Сервис уведомлений" as notificationService
+participant "Redis Cache" as cache
+participant "База данных" as db
+participant "Очередь сообщений" as queue
+participant "CDN" as cdn
+
+' Начальная авторизация и загрузка профиля
+group Авторизация и загрузка профиля
+    user -> webclient: Вход на платформу
+    webclient -> gateway: POST /auth/login
+    gateway -> auth: Аутентификация
+    auth -> userService: Проверка учетных данных
+    userService -> db: Запрос данных пользователя
+    db --> userService: Данные пользователя
+    userService -> cache: Кэширование сессии
+    auth --> gateway: JWT токен
+    gateway --> webclient: Успешная авторизация
+    
+    webclient -> gateway: GET /users/profile
+    gateway -> userService: Получить профиль
+    userService -> db: Запрос расширенных данных
+    db --> userService: Профиль, статистика, календарь
+    userService --> gateway: Полные данные профиля
+    gateway --> webclient: Данные профиля
+    webclient --> user: Отображение дашборда
+end
+
+' Выбор и загрузка курса
+group Загрузка курса N3
+    user -> webclient: Открыть курс N3
+    webclient -> gateway: GET /courses/N3
+    gateway -> courseService: Получить курс
+    courseService -> cache: Проверить кэш
+    
+    alt Курс в кэше
+        cache --> courseService: Данные курса
+    else Курс не в кэше
+        courseService -> db: Запрос структуры курса
+        db --> courseService: Данные курса
+        courseService -> db: Запрос словаря курса
+        db --> courseService: Словарь
+        courseService -> cache: Сохранить в кэш
+    end
+    
+    courseService -> progressService: Получить прогресс пользователя
+    progressService -> db: Запрос прогресса
+    db --> progressService: Данные прогресса
+    progressService --> courseService: Прогресс курса
+    
+    courseService --> gateway: Курс + прогресс
+    gateway --> webclient: Полные данные курса
+    webclient --> user: Отображение структуры курса
+end
+
+' Начало урока
+group Загрузка урока
+    user -> webclient: Открыть урок
+    webclient -> gateway: GET /lessons/{id}
+    gateway -> lessonService: Получить урок
+    
+    lessonService -> cache: Проверить кэш урока
+    alt Урок в кэше
+        cache --> lessonService: Данные урока
+    else Урок не в кэше
+        lessonService -> db: Запрос данных урока
+        db --> lessonService: Базовые данные урока
+        lessonService -> materialService: Получить материалы урока
+        materialService -> db: Запрос материалов
+        db --> materialService: Материалы
+        materialService -> cdn: Получить URL медиафайлов
+        cdn --> materialService: URL контента
+        materialService --> lessonService: Материалы урока
+        lessonService -> cache: Сохранить в кэш
+    end
+    
+    lessonService --> gateway: Полные данные урока
+    gateway --> webclient: Данные урока
+    webclient --> user: Отображение урока
+end
+
+' Работа с материалами
+group Изучение материалов
+    user -> webclient: Открыть презентацию
+    webclient -> gateway: GET /materials/{id}
+    gateway -> materialService: Получить презентацию
+    materialService -> cdn: Запрос контента
+    cdn --> materialService: Контент
+    materialService --> gateway: Данные презентации
+    gateway --> webclient: Контент
+    webclient --> user: Показ презентации
+    
+    user -> webclient: Воспроизвести видео
+    webclient -> gateway: GET /materials/video/{id}
+    gateway -> materialService: Получить видео
+    materialService -> cdn: Стриминг видео
+    cdn --> webclient: Видеопоток
+    webclient --> user: Воспроизведение
+end
+
+' Различные виды тестирования
+group Прохождение тестов
+    user -> webclient: Начать тестирование
+    webclient -> gateway: POST /tests/start
+    gateway -> testingService: Инициализация тестов
+    
+    loop Для каждого типа теста
+        alt Аудирование
+            testingService -> materialService: Получить аудиофайл
+            materialService -> cdn: Запрос аудио
+            cdn --> materialService: Аудиофайл
+            materialService --> testingService: URL аудио
+            testingService --> gateway: Тест аудирования
+            gateway --> webclient: Данные теста
+            webclient --> user: Воспроизведение аудио
+            user -> webclient: Ответ на вопрос
+            
+        else Тест на соответствие
+            testingService -> materialService: Получить изображения
+            materialService -> cdn: Запрос изображений
+            cdn --> materialService: Изображения
+            materialService --> testingService: URL изображений
+            testingService --> gateway: Тест на соответствие
+            gateway --> webclient: Данные теста
+            webclient --> user: Показ вариантов
+            user -> webclient: Сопоставление
+            
+        else Тест на чтение
+            testingService -> db: Получить текст и вопросы
+            db --> testingService: Данные теста
+            testingService --> gateway: Тест на чтение
+            gateway --> webclient: Данные теста
+            webclient --> user: Показ текста и вопросов
+            user -> webclient: Ответы на вопросы
+        end
+        
+        webclient -> gateway: POST /tests/{id}/submit
+        gateway -> testingService: Проверка ответов
+        testingService -> testingService: Валидация
+        testingService -> progressService: Обновить результаты
+        progressService -> db: Сохранить результаты
+        
+        testingService -> queue: Событие TestCompleted
+        queue -> achievementService: Проверка достижений
+        queue -> progressService: Обновить XP
+    end
+end
+
+' Обработка завершения урока
+group Завершение урока
+    progressService -> progressService: Подсчет общего результата
+    progressService -> queue: Событие LessonCompleted
+    
+    queue -> achievementService: Проверка достижений урока
+    achievementService -> achievementService: Проверка условий
+    
+    alt Новое достижение
+        achievementService -> queue: Событие AchievementUnlocked
+        queue -> notificationService: Создать уведомление
+        queue -> progressService: Начислить XP за достижение
+        notificationService --> webclient: WebSocket уведомление
+        webclient --> user: Показ уведомления
+    end
+    
+    progressService -> userService: Обновить XP пользователя
+    userService -> db: Сохранить новый XP
+    
+    alt Новый уровень
+        userService -> queue: Событие LevelUp
+        queue -> notificationService: Уведомление о новом уровне
+        notificationService --> webclient: WebSocket уведомление
+        webclient --> user: Показ поздравления
+    end
+    
+    progressService --> gateway: Урок завершен
+    gateway --> webclient: Финальные результаты
+    webclient --> user: Показ результатов и наград
+end
+
+' Работа с календарем
+group Работа с календарем
+    user -> webclient: Открыть календарь
+    webclient -> gateway: GET /calendar
+    gateway -> userService: Получить календарь
+    userService -> db: Запрос заметок
+    db --> userService: Заметки пользователя
+    userService --> gateway: Данные календаря
+    gateway --> webclient: Календарь с заметками
+    webclient --> user: Отображение календаря
+    
+    user -> webclient: Добавить заметку
+    webclient -> gateway: POST /calendar/notes
+    gateway -> userService: Сохранить заметку
+    userService -> db: Запись заметки
+    db --> userService: Подтверждение
+    userService --> gateway: Заметка сохранена
+    gateway --> webclient: Успех
+    webclient --> user: Обновление календаря
+end
+
+' Просмотр статистики
+group Просмотр статистики
+    user -> webclient: Открыть статистику
+    webclient -> gateway: GET /statistics
+    gateway -> progressService: Получить статистику
+    
+    progressService -> cache: Проверить кэш
+    alt Статистика в кэше
+        cache --> progressService: Данные статистики
+    else Статистика не в кэше
+        progressService -> db: Запрос прогресса всех курсов
+        db --> progressService: Данные курсов
+        progressService -> db: Запрос результатов тестов
+        db --> progressService: Результаты тестов
+        progressService -> db: Запрос достижений
+        db --> progressService: Достижения
+        progressService -> cache: Сохранить статистику
+    end
+    
+    progressService --> gateway: Полная статистика
+    gateway --> webclient: Данные статистики
+    webclient --> user: Визуализация прогресса
+end
+
+@enduml
