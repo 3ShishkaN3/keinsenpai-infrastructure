@@ -3,69 +3,36 @@ pipeline {
 
     environment {
         PROJECT_NAME = 'keisenpai'
-        SERVICES = [
-            // Пример заполнения для существующего репозитория:
-            // ['service-name', true, 'git-repository-url'],
-            ['admin-service', false, ''],
-            ['user-service', false, ''],
-            ['courses-service', false, ''],
-            ['lessons-service', false, ''],
-            ['tests-service', false, ''],
-            ['achievement-service', false, ''],
-            ['progress-service', false, ''],
-            ['notification-service', false, ''],
-            ['analytic-service', false, ''],
-            ['search-service', false, ''],
-            ['material-service', false, ''],
-            ['payment-service', false, ''],
-            ['api-gateway', false, ''],
-            ['auth-service', false, '']
-        ]
+        def SERVICES ='admin-service,user-service,courses-service,lessons-service,tests-service,achievement-service,progress-service,notification-service,analytic-service,search-service,material-service,payment-service,api-gateway,auth-service'
+
     }
 
     stages {
         stage('Setup Services') {
             steps {
                 script {
-                    def isWindows = isWindowsOS()
-                    
-                    SERVICES.each { serviceData ->
-                        def (service, isRepoExist, repoUrl) = serviceData
-                        stage("Setup ${service.capitalize()}") {
-                            steps {
-                                dir("services/${service}") {
-                                    script {
-                                        if (isRepoExist) {
-                                            sh "git clone ${repoUrl} ."
-                                        } else {
-                                            if (isWindows) {
-                                                generateServiceWindows(service)
-                                            } else {
-                                                generateServiceUnix(service)
-                                            }
-                                        }
-                                    }
-                                }
+                    SERVICES.tokenize(',').each { serviceData ->
+                        def service = serviceData
+                        echo "Setting up ${service}"
+                        dir("services/${service}") {
+                            if (isUnix()) {
+                                generateServiceUnix(service)
+                            } else {
+                                generateServiceWindows(service)
                             }
                         }
                     }
                 }
             }
         }
-        
+
         stage('Build Services') {
-            parallel {
+            steps {
                 script {
-                    SERVICES.each { serviceData ->
-                        def (service, _, _) = serviceData
-                        stage("Build ${service.capitalize()}") {
-                            steps {
-                                dir("services/${service}") {
-                                    script {
-                                        dockerBuild(service)
-                                    }
-                                }
-                            }
+                    SERVICES.tokenize(',').each { serviceData ->
+                        def service = serviceData
+                        dir("services/${service}") {
+                            dockerBuild(service)
                         }
                     }
                 }
@@ -73,18 +40,12 @@ pipeline {
         }
 
         stage('Test Services') {
-            parallel {
+            steps {
                 script {
-                    SERVICES.each { serviceData ->
-                        def (service, _, _) = serviceData
-                        stage("Test ${service.capitalize()}") {
-                            steps {
-                                dir("services/${service}") {
-                                    script {
-                                        dockerTest(service)
-                                    }
-                                }
-                            }
+                    SERVICES.tokenize(',').each { serviceData ->
+                        def service = serviceData
+                        dir("services/${service}") {
+                            dockerTest(service)
                         }
                     }
                 }
@@ -122,12 +83,6 @@ def dockerTest(serviceName) {
     sh "docker run --rm ${PROJECT_NAME}/${serviceName}:latest test || true"
 }
 
-// Функция для определения ОС
-def isWindowsOS() {
-    return System.getProperty('os.name').toLowerCase().contains('win')
-}
-
-// Функция для создания шаблонов на Windows
 def generateServiceWindows(serviceName) {
     def templateDir = determineTemplate(serviceName)
     if (templateDir) {
@@ -135,7 +90,6 @@ def generateServiceWindows(serviceName) {
     }
 }
 
-// Функция для создания шаблонов на Unix
 def generateServiceUnix(serviceName) {
     def templateDir = determineTemplate(serviceName)
     if (templateDir) {
@@ -143,11 +97,10 @@ def generateServiceUnix(serviceName) {
     }
 }
 
-// Функция для определения шаблона сервиса
 def determineTemplate(serviceName) {
-    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('auth') || serviceName.contains('api-gateway') || serviceName.contains('payment'){
+    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('auth') || serviceName.contains('api-gateway') || serviceName.contains('payment')) {
         return 'templates/spring-template'
-    } else if (serviceName.contains('courses') || serviceName.contains('lessons') || serviceName.contains('tests'))  || serviceName.contains('progress')) {
+    } else if (serviceName.contains('courses') || serviceName.contains('lessons') || serviceName.contains('tests')  || serviceName.contains('progress')) {
         return 'templates/gin-template'
     } else if (serviceName.contains('achievement') || serviceName.contains('material') || serviceName.contains('analytic')) {
         return 'templates/fastapi-template'

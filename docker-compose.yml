@@ -1,7 +1,29 @@
 version: '3.8'
 
 services:
-  
+  # Jenkins сервис
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: keisenpai-jenkins
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - keisenpai-network
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    entrypoint:
+      - /bin/tini
+      - -- 
+      - /usr/local/bin/jenkins.sh
+    command: []
+
+
   # Java Services (Spring Boot)
   api-gateway:
     build: 
@@ -308,6 +330,9 @@ networks:
     driver: bridge
 
 volumes:
+  #Jenkins
+  jenkins_home:
+
   # БД тома
   users-db-data:
   progress-db-data:

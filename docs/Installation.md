@@ -51,7 +51,6 @@
 - Docker (версия 20.10.0 или выше)
 - Docker Compose (версия 1.29.0 или выше)
 - Git
-- Jenkins (опционально, для CI/CD)
 
 ## 💻 Установка на различных операционных системах
 
@@ -70,13 +69,14 @@
 
 2. **Клонирование репозитория**
    ```powershell
-   git clone https://github.com/keisenpai/infrastructure.git
+   git clone https://gitverse.ru/shish/keisenpai-infrastructure
    cd infrastructure
    ```
 
-3. **Запуск сервисов**
+3. **Запуск Jenkins контейнера**
    ```powershell
-   docker-compose up -d
+   chmod +x run.sh
+   ./run.sh
    ```
 
 ### Ubuntu (20.04/22.04)
@@ -98,13 +98,14 @@
 
 2. **Клонирование репозитория**
    ```bash
-   git clone https://github.com/keisenpai/infrastructure.git
+   git clone https://gitverse.ru/shish/keisenpai-infrastructure
    cd infrastructure
    ```
 
-3. **Запуск сервисов**
+3. **Запуск Jenkins контейнера**
    ```bash
-   docker-compose up -d
+   chmod +x run.sh
+   ./run.sh
    ```
 
 ### Arch Linux
@@ -129,14 +130,13 @@
 
 2. **Клонирование репозитория**:
    ```bash
-   git clone https://github.com/keisenpai/infrastructure.git
+   git clone https://gitverse.ru/shish/keisenpai-infrastructure
    cd infrastructure
    ```
 
-3. **Запуск сервисов**:
+3. **Запуск Jenkins контейнера**:
    ```bash
-   # Запуск контейнеров в фоновом режиме
-   docker-compose up -d
+   ./run.sh
    ```
 
 4. **(Опционально) Установка и настройка Jenkins** Для установки Jenkins на Arch Linux можно использовать AUR:
@@ -167,13 +167,14 @@
 
 2. **Клонирование репозитория**
    ```bash
-   git clone https://github.com/keisenpai/infrastructure.git
+   git clone https://gitverse.ru/shish/keisenpai-infrastructure
    cd infrastructure
    ```
 
-3. **Запуск сервисов**
+3. **Запуск Jenkins контейнера**
    ```bash
-   docker-compose up -d
+   chmod +x run.sh
+   ./run.sh
    ```
 
 ## 🔍 Подробное описание инфраструктурных файлов
