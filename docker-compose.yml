@@ -1,7 +1,29 @@
 version: '3.8'
 
 services:
-  # Go Services (Gin)
+  
+  # Java Services (Spring Boot)
+  api-gateway:
+    build: 
+      context: ./services/api-gateway
+    ports:
+      - "8001:8080"
+    networks:
+      - keisenpai-network
+    depends_on:
+      - rabbitmq
+      - auth-service
+
+  auth-service:
+    build: 
+      context: ./services/auth-service
+    ports:
+      - "8002:8080"
+    networks:
+      - keisenpai-network
+    depends_on:
+      - users-db
+      - rabbitmq
   admin-service:
     build: 
       context: ./services/admin-service
@@ -24,6 +46,7 @@ services:
       - users-db
       - rabbitmq
 
+  # Go Services (Gin)
   progress-service:
     build: 
       context: ./services/progress-service
@@ -35,7 +58,7 @@ services:
       - progress-db
       - rabbitmq
 
-  # Java Services (Spring Boot)
+  
   courses-service:
     build: 
       context: ./services/courses-service

@@ -17,7 +17,9 @@ pipeline {
             ['analytic-service', false, ''],
             ['search-service', false, ''],
             ['material-service', false, ''],
-            ['payment-service', false, '']
+            ['payment-service', false, ''],
+            ['api-gateway', false, ''],
+            ['auth-service', false, '']
         ]
     }
 
@@ -143,10 +145,10 @@ def generateServiceUnix(serviceName) {
 
 // Функция для определения шаблона сервиса
 def determineTemplate(serviceName) {
-    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('progress')) {
-        return 'templates/gin-template'
-    } else if (serviceName.contains('courses') || serviceName.contains('lessons') || serviceName.contains('tests')) {
+    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('auth') || serviceName.contains('api-gateway'){
         return 'templates/spring-template'
+    } else if (serviceName.contains('courses') || serviceName.contains('lessons') || serviceName.contains('tests'))  || serviceName.contains('progress')) {
+        return 'templates/gin-template'
     } else if (serviceName.contains('achievement') || serviceName.contains('material') || serviceName.contains('analytic')) {
         return 'templates/fastapi-template'
     } else if (serviceName.contains('notification') || serviceName.contains('search')) {
