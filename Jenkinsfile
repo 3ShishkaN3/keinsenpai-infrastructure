@@ -145,7 +145,7 @@ def generateServiceUnix(serviceName) {
 
 // Функция для определения шаблона сервиса
 def determineTemplate(serviceName) {
-    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('auth') || serviceName.contains('api-gateway'){
+    if (serviceName.contains('admin') || serviceName.contains('user') || serviceName.contains('auth') || serviceName.contains('api-gateway') || serviceName.contains('payment'){
         return 'templates/spring-template'
     } else if (serviceName.contains('courses') || serviceName.contains('lessons') || serviceName.contains('tests'))  || serviceName.contains('progress')) {
         return 'templates/gin-template'

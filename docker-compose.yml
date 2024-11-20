@@ -46,6 +46,17 @@ services:
       - users-db
       - rabbitmq
 
+  payment-service:
+    build: 
+      context: ./services/payment-service
+    ports:
+      - "8104:8080"
+    networks:
+      - keisenpai-network
+    depends_on:
+      - payments-db
+      - rabbitmq
+
   # Go Services (Gin)
   progress-service:
     build: 
@@ -92,16 +103,6 @@ services:
       - tests-db
       - rabbitmq
 
-  payment-service:
-    build: 
-      context: ./services/payment-service
-    ports:
-      - "8104:8080"
-    networks:
-      - keisenpai-network
-    depends_on:
-      - payments-db
-      - rabbitmq
 
   # Python Services (FastAPI)
   achievement-service:
