@@ -73,10 +73,10 @@
    cd infrastructure
    ```
 
-3. **Запуск Jenkins контейнера**
+3. **Инициализация и запуск проекта**
    ```powershell
-   chmod +x run.sh
-   ./run.sh
+   Set-ExecutionPolicy RemoteSigned
+   ./run-windows.ps1
    ```
 
 ### Ubuntu (20.04/22.04)
@@ -102,10 +102,10 @@
    cd infrastructure
    ```
 
-3. **Запуск Jenkins контейнера**
+3. **Инициализация и запуск проекта**
    ```bash
-   chmod +x run.sh
-   ./run.sh
+   chmod +x run-linux.sh
+   ./run-linux.sh
    ```
 
 ### Arch Linux
@@ -134,22 +134,11 @@
    cd infrastructure
    ```
 
-3. **Запуск Jenkins контейнера**:
+3. **Инициализация и запуск проекта**
    ```bash
-   ./run.sh
+   chmod +x run-linux.sh
+   ./run-linux.sh
    ```
-
-4. **(Опционально) Установка и настройка Jenkins** Для установки Jenkins на Arch Linux можно использовать AUR:
-   ```bash
-   yay -S jenkins
-   ```
-
-После установки Jenkins, запустите сервис:
-   ```bash
-   sudo systemctl start jenkins
-   sudo systemctl enable jenkins
-   ```
-Вы можете получить доступ к Jenkins по адресу http://localhost:8080.
 
 ### macOS
 
@@ -171,11 +160,11 @@
    cd infrastructure
    ```
 
-3. **Запуск Jenkins контейнера**
+3. **Инициализация и запуск проекта**
    ```bash
-   chmod +x run.sh
-   ./run.sh
-   ```
+   chmod +x run-macos.sh
+   ./run-macos.sh
+    ```
 
 ## 🔍 Подробное описание инфраструктурных файлов
 

@@ -1,0 +1,33 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Go workspace file
+go.work
+
+# Vendor directory (если используется)
+vendor/
+
+# Папка для сборки
+bin/
+
+# Папка для артефактов сборки
+build/
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Go modules
+go.sum
+
+# IDEs
+.idea/
+.vscode/
+
+# Макеты для зависимостей
+*.mod

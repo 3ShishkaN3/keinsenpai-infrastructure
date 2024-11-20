@@ -2,26 +2,26 @@ version: '3.8'
 
 services:
   # Jenkins сервис
-  jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: keisenpai-jenkins
-    container_name: jenkins
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-    networks:
-      - keisenpai-network
-    environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-    entrypoint:
-      - /bin/tini
-      - -- 
-      - /usr/local/bin/jenkins.sh
-    command: []
+  #jenkins:
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile
+  #  image: keisenpai-jenkins
+  #  container_name: jenkins
+  #  ports:
+  #    - "8080:8080"
+  #    - "50000:50000"
+  #  volumes:
+  #    - jenkins_home:/var/jenkins_home
+  #  networks:
+  #    - keisenpai-network
+  #  environment:
+  #    - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+  #  entrypoint:
+  #    - /bin/tini
+  #    - -- 
+  #    - /usr/local/bin/jenkins.sh
+  #  command: []
 
 
   # Java Services (Spring Boot)
@@ -50,7 +50,7 @@ services:
     build: 
       context: ./services/admin-service
     ports:
-      - "8001:8000"
+      - "8005:8080"
     networks:
       - keisenpai-network
     depends_on:
@@ -61,7 +61,7 @@ services:
     build: 
       context: ./services/user-service
     ports:
-      - "8002:8000"
+      - "8004:8080"
     networks:
       - keisenpai-network
     depends_on:
@@ -72,7 +72,7 @@ services:
     build: 
       context: ./services/payment-service
     ports:
-      - "8104:8080"
+      - "8003:8080"
     networks:
       - keisenpai-network
     depends_on:
@@ -84,7 +84,7 @@ services:
     build: 
       context: ./services/progress-service
     ports:
-      - "8003:8000"
+      - "8104:8000"
     networks:
       - keisenpai-network
     depends_on:
@@ -96,7 +96,7 @@ services:
     build: 
       context: ./services/courses-service
     ports:
-      - "8101:8080"
+      - "8101:8000"
     networks:
       - keisenpai-network
     depends_on:
@@ -107,7 +107,7 @@ services:
     build: 
       context: ./services/lessons-service
     ports:
-      - "8102:8080"
+      - "8102:8000"
     networks:
       - keisenpai-network
     depends_on:
@@ -118,7 +118,7 @@ services:
     build: 
       context: ./services/tests-service
     ports:
-      - "8103:8080"
+      - "8103:8000"
     networks:
       - keisenpai-network
     depends_on:
